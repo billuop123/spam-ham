@@ -1,25 +1,22 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
+
+	dataread "github.com/billuop123/spam-ham/utils"
 )
 
 func main() {
-	trainingData := [][]string{
-		{"send us your password", "spam"},
-		{"review us", "spam"},
-		{"send us your account", "spam"},
-		{"send us  password", "spam"},
-		{"password review", "ham"},
-		{"send us your review", "ham"},
-	}
-	testData := [][]string{
-		{"review us now"},
-		{"review account"},
-	}
-
+	trainingData := dataread.ReadData()
+	var inputString string
 	// bow
+	fmt.Println("Enter a text:")
+	reader := bufio.NewReader(os.Stdin)
+	inputString, _ = reader.ReadString('\n')
+	inputString = strings.TrimSpace(inputString)
 	bow := map[string]int{}
 	// spambow
 	spamBow := map[string]int{}
@@ -30,7 +27,7 @@ func main() {
 	totalCount := spamCount + hamCount
 	spamProb := float64(spamCount) / float64(totalCount)
 	hamProb := float64(hamCount) / float64(totalCount)
-	testDecider(testData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
+	testDecider(inputString, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
 }
 
 func spamHamCount(data [][]string) (int, int) {
@@ -100,15 +97,11 @@ func bowCount(trainingData [][]string, bow, spamBow, hamBow map[string]int) {
 	}
 }
 
-func testDecider(testData [][]string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) {
-	for _, outerdata := range testData {
-		for _, innerData := range outerdata {
-			finalSpamProb, finalHamProb := calculateProb(innerData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
-			if finalSpamProb > finalHamProb {
-				fmt.Println("This is a spam")
-			} else {
-				fmt.Println("This is ham")
-			}
-		}
+func testDecider(testData string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) {
+	finalSpamProb, finalHamProb := calculateProb(testData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
+	if finalSpamProb > finalHamProb {
+		fmt.Println("This is a Spam")
+	} else {
+		fmt.Println("This is ham")
 	}
 }
