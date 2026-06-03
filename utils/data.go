@@ -3,7 +3,6 @@ package dataread
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -12,7 +11,7 @@ import (
 func ReadData() [][]string {
 	file, err := os.Open("spamhamdata.csv")
 	if err != nil {
-		fmt.Println("The file could not be read")
+		panic("The file could not be read")
 	}
 	defer func() {
 		err = file.Close()

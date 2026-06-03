@@ -1,22 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	dataread "github.com/billuop123/spam-ham/utils"
 )
 
 func main() {
-	trainingData := dataread.ReadData()
-	var inputString string
-	// bow
-	fmt.Println("Enter a text:")
-	reader := bufio.NewReader(os.Stdin)
-	inputString, _ = reader.ReadString('\n')
-	inputString = strings.TrimSpace(inputString)
+	totalData := dataread.ReadData()
+	limit := len(totalData) - int(0.2*float64(len(totalData)))
+	testData := totalData[limit:]
+	_ = testData
+	trainingData := totalData[:limit]
 	bow := map[string]int{}
 	// spambow
 	spamBow := map[string]int{}
@@ -27,7 +23,7 @@ func main() {
 	totalCount := spamCount + hamCount
 	spamProb := float64(spamCount) / float64(totalCount)
 	hamProb := float64(hamCount) / float64(totalCount)
-	testDecider(inputString, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
+	eval(testData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
 }
 
 func spamHamCount(data [][]string) (int, int) {
@@ -97,11 +93,47 @@ func bowCount(trainingData [][]string, bow, spamBow, hamBow map[string]int) {
 	}
 }
 
-func testDecider(testData string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) {
+func testDecider(testData string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) (bool, bool) {
 	finalSpamProb, finalHamProb := calculateProb(testData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
 	if finalSpamProb > finalHamProb {
-		fmt.Println("This is a Spam")
+		return true, false
 	} else {
-		fmt.Println("This is ham")
+		return false, true
 	}
+}
+
+func eval(testData [][]string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) {
+	truePositive := 0.0
+	trueNegative := 0.0
+	falsePositive := 0.0
+	falseNegative := 0.0
+	for _, test := range testData {
+		val1, _ := testDecider(test[0], spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
+		if val1 {
+			if test[1] == "spam" {
+				truePositive++
+			} else {
+				falsePositive++
+			}
+		} else {
+			if test[1] == "ham" {
+				trueNegative++
+			} else {
+				falseNegative++
+			}
+		}
+	}
+	accuracy := (truePositive + trueNegative) / (truePositive + trueNegative + falsePositive + falseNegative)
+	recall := truePositive / (truePositive + falseNegative)
+	precision := truePositive / (truePositive + falsePositive)
+	fmt.Println("Confusion Matrix:")
+	fmt.Println("----------------------------------------------")
+	fmt.Println("|           |  Predicted+         |Predicted- |")
+	fmt.Println("|-----------|---------------------------------|")
+	fmt.Printf("|   Actual+ |-----%.0f------------%.0f------------|\n", truePositive, falseNegative)
+	fmt.Printf("|   Actual- |-----%.0f------------%.0f-----------|\n", falsePositive, trueNegative)
+	fmt.Println("|---------------------------------------------|")
+	fmt.Printf("accuracy %.2f\n", accuracy)
+	fmt.Printf("recall %.2f\n", recall)
+	fmt.Printf("precision %.2f\n", precision)
 }
