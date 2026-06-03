@@ -19,28 +19,32 @@ func main() {
 	// ham bow
 	hamBow := map[string]int{}
 	bowCount(trainingData, bow, spamBow, hamBow)
-	spamCount, hamCount := spamHamCount(trainingData)
-	totalCount := spamCount + hamCount
-	spamProb := float64(spamCount) / float64(totalCount)
-	hamProb := float64(hamCount) / float64(totalCount)
+	spamCount, hamCount, spamMsgs, hamMsgs := spamHamCount(trainingData)
+	totalCount := spamMsgs + hamMsgs
+	spamProb := float64(spamMsgs) / float64(totalCount)
+	hamProb := float64(hamMsgs) / float64(totalCount)
 	eval(testData, spamCount, hamCount, spamBow, hamBow, spamProb, hamProb)
 }
 
-func spamHamCount(data [][]string) (int, int) {
+func spamHamCount(data [][]string) (int, int, int, int) {
 	spamCount := 0
 	hamCount := 0
+	spamMsgs := 0
+	hamMsgs := 0
 	for _, item := range data {
 		words := strings.Split(item[0], " ")
 		switch item[1] {
 		case "spam":
 			spamCount += len(words)
+			spamMsgs++
 		case "ham":
 			hamCount += len(words)
+			hamMsgs++
 		default:
 			fmt.Println("class not found")
 		}
 	}
-	return spamCount, hamCount
+	return spamCount, hamCount, spamMsgs, hamMsgs
 }
 
 func calculateProb(data string, spamCount, hamCount int, spamBow, hamBow map[string]int, spamProb, hamProb float64) (float64, float64) {
